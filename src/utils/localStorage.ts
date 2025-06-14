@@ -1,4 +1,6 @@
 // Claves para el localStorage
+import type { Venta, Meta } from '../types';
+
 const ENCUESTAS_KEY = 'encuestas';
 
 export const STORAGE_KEYS = {
@@ -8,29 +10,6 @@ export const STORAGE_KEYS = {
   CONFIGURACION: 'configuracion'
 } as const;
 
-// Tipos de datos
-export interface Venta {
-  id: number;
-  fecha: string;
-  producto: string;
-  unidades: number;
-  observaciones: string;
-}
-
-export interface Encuesta {
-  id: number;
-  fecha: string;
-  producto: string;
-  calificacion: number;
-  comentario: string;
-}
-
-export interface Meta {
-  id: number;
-  fecha: string;
-  metaDiaria: number;
-  metaMensual: number;
-}
 
 export interface Configuracion {
   tema: 'claro' | 'oscuro';

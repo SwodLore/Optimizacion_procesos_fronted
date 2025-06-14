@@ -2,14 +2,7 @@ import { useEffect, useState } from 'react';
 import { useVentas } from '../context/VentasContext';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
 import { getEncuestas, setEncuestas } from '../utils/localStorage';
-
-interface Encuesta {
-  id: number;
-  fecha: string;
-  producto: string;
-  calificacion: number;
-  comentario: string;
-}
+import type { Encuesta } from '../types';
 
 const SatisfaccionCliente = () => {
   const { ventas } = useVentas();
