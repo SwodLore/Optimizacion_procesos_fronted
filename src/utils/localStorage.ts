@@ -1,4 +1,6 @@
 // Claves para el localStorage
+const ENCUESTAS_KEY = 'encuestas';
+
 export const STORAGE_KEYS = {
   VENTAS: 'ventas',
   ENCUESTAS: 'encuestas',
@@ -80,12 +82,13 @@ export const setVentas = (ventas: Venta[]): void => {
   setItem(STORAGE_KEYS.VENTAS, ventas);
 };
 
-export const getEncuestas = (): Encuesta[] => {
-  return getItem<Encuesta[]>(STORAGE_KEYS.ENCUESTAS) || [];
+export const getEncuestas = () => {
+  const data = localStorage.getItem(ENCUESTAS_KEY);
+  return data ? JSON.parse(data) : [];
 };
 
-export const setEncuestas = (encuestas: Encuesta[]): void => {
-  setItem(STORAGE_KEYS.ENCUESTAS, encuestas);
+export const setEncuestas = (encuestas: any[]) => {
+  localStorage.setItem(ENCUESTAS_KEY, JSON.stringify(encuestas));
 };
 
 export const getMetas = (): Meta[] => {

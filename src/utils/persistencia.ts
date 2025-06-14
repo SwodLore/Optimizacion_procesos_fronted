@@ -1,4 +1,4 @@
-import { Venta, Encuesta, Meta, Configuracion } from '../types';
+import type { Venta, Encuesta, Meta, Configuracion } from '../types';
 
 export const STORAGE_KEYS = {
   VENTAS: 'ventas',

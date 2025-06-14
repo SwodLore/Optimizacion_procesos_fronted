@@ -86,15 +86,21 @@ const IndicadoresGestion = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <div className="bg-white shadow-md rounded-2xl p-6">
-          <h2 className="text-2xl font-bold mb-4">Análisis de Productos</h2>
-          <div className="overflow-x-auto">
-            <table className="table w-full">
-              <thead>
+        <div className="bg-white border border-gray-100 shadow-lg rounded-2xl p-6 space-y-4">
+          <h2 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2a4 4 0 014-4h2m1-4h.01M20 12c0 4.418-3.582 8-8 8s-8-3.582-8-8 3.582-8 8-8 8 3.582 8 8z" />
+            </svg>
+            Análisis de Productos
+          </h2>
+
+          <div className="overflow-x-auto rounded-lg">
+            <table className="min-w-full text-sm text-left text-gray-700 border border-gray-200">
+              <thead className="bg-gray-50 text-gray-600 uppercase text-xs font-semibold">
                 <tr>
-                  <th>Producto</th>
-                  <th>Ventas</th>
-                  <th>% del Total</th>
+                  <th className="px-4 py-3">Producto</th>
+                  <th className="px-4 py-3">Ventas</th>
+                  <th className="px-4 py-3">% del Total</th>
                 </tr>
               </thead>
               <tbody>
@@ -104,16 +110,17 @@ const IndicadoresGestion = () => {
                     return acc;
                   }, {})
                 ).map(([producto, ventas]) => (
-                  <tr key={producto} className="hover:bg-gray-100">
-                    <td>{producto}</td>
-                    <td>{ventas}</td>
-                    <td>{((ventas / totalVentas) * 100).toFixed(1)}%</td>
+                  <tr key={producto} className="border-t hover:bg-gray-50 transition">
+                    <td className="px-4 py-3 font-medium">{producto}</td>
+                    <td className="px-4 py-3">{ventas}</td>
+                    <td className="px-4 py-3 text-blue-600 font-semibold">{((ventas / totalVentas) * 100).toFixed(1)}%</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
+
 
         <div className="bg-white shadow-md rounded-2xl p-6">
           <h2 className="text-2xl font-bold mb-4">Resumen de Indicadores</h2>

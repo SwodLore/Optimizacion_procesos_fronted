@@ -67,7 +67,9 @@ export const EncuestasProvider = ({ children }: { children: ReactNode }) => {
       const promedio = encuestas.length
         ? encuestas.reduce((acc, curr) => acc + curr.calificacion, 0) / encuestas.length
         : 0;
-      return promedio >= 4 ? 'Alta' : promedio >= 3 ? 'Media' : 'Baja';
+      if (promedio >= 4) return 'Alta' as const;
+      if (promedio >= 3) return 'Media' as const;
+      return 'Baja' as const;
     })(),
     distribucionCalificaciones: encuestas.reduce((acc, curr) => {
       acc[curr.calificacion] = (acc[curr.calificacion] || 0) + 1;

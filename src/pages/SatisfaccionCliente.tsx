@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useVentas } from '../context/VentasContext';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
+import { getEncuestas, setEncuestas } from '../utils/localStorage';
 
 interface Encuesta {
   id: number;
@@ -12,26 +13,35 @@ interface Encuesta {
 
 const SatisfaccionCliente = () => {
   const { ventas } = useVentas();
-  const [encuestas, setEncuestas] = useState<Encuesta[]>([]);
+  const [encuestas, setEncuestasState] = useState<Encuesta[]>([]);
   const [nuevaEncuesta, setNuevaEncuesta] = useState({
     producto: '',
     calificacion: 5,
     comentario: ''
   });
 
+  useEffect(() => {
+    const datos = getEncuestas();
+    setEncuestasState(datos);
+  }, []);
+
+  // Guardar encuestas en localStorage cada vez que cambian
+  useEffect(() => {
+    if (encuestas.length > 0) {
+      setEncuestas(encuestas);
+    }
+  }, [encuestas]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const encuesta: Encuesta = {
+    const nueva = {
       id: Date.now(),
       fecha: new Date().toISOString().split('T')[0],
       ...nuevaEncuesta
     };
-    setEncuestas([...encuestas, encuesta]);
-    setNuevaEncuesta({
-      producto: '',
-      calificacion: 5,
-      comentario: ''
-    });
+    const nuevasEncuestas = [...encuestas, nueva];
+    setEncuestasState(nuevasEncuestas);
+    setNuevaEncuesta({ producto: '', calificacion: 5, comentario: '' });
   };
 
   // Estadísticas
@@ -145,7 +155,7 @@ const SatisfaccionCliente = () => {
                   dataKey="value"
                   label={({ name, percent }) => `${name} (${(percent * 100).toFixed(0)}%)`}
                 >
-                  {datosGrafico.map((entry, index) => (
+                  {datosGrafico.map((_, index) => (
                     <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                   ))}
                 </Pie>

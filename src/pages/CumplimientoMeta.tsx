@@ -64,18 +64,25 @@ const CumplimientoMeta = () => {
   return (
     <div className="space-y-10">
       {/* Meta configurador */}
-      <div className="bg-white shadow-md rounded-2xl p-6">
-        <h2 className="text-xl font-bold mb-4 text-gray-800">Configuración de Meta</h2>
-        <div className="flex flex-col md:flex-row items-center gap-4">
-          <label className="text-sm font-medium text-gray-600">
+      <div className="bg-white shadow-lg rounded-2xl p-6 space-y-5 border border-gray-100">
+        <h2 className="text-2xl font-semibold text-gray-800 flex items-center gap-2">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-indigo-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12c0 4.418-3.582 8-8 8s-8-3.582-8-8 3.582-8 8-8 8 3.582 8 8z" />
+          </svg>
+          Configuración de Meta
+        </h2>
+
+        <div className="flex flex-col md:flex-row md:items-center gap-4">
+          <label className="text-sm font-medium text-gray-700 w-48">
             Meta Diaria de Ventas:
           </label>
           <input
             type="number"
             value={metaDiaria}
             onChange={(e) => setMetaDiaria(Number(e.target.value))}
-            className="input input-bordered w-full max-w-xs border-gray-300 focus:ring-2 focus:ring-indigo-500 rounded-md"
+            className="w-full max-w-xs px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:outline-none transition"
             min="1"
+            placeholder="Ej. 20"
           />
         </div>
       </div>

@@ -26,7 +26,6 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen flex bg-gray-100">
-      {/* Sidebar para desktop */}
       <aside className="hidden lg:flex lg:flex-col lg:w-64 bg-white border-r border-gray-200 shadow-sm">
         <div className="h-16 flex items-center px-6 border-b border-gray-200">
           <h1 className="text-lg font-semibold text-indigo-600 tracking-tight">Sistema de Ventas</h1>

@@ -1,19 +1,22 @@
 import { Routes, Route } from 'react-router-dom';
-import Navbar from './components/layout/Navbar';
-import RegistroVentas from './pages/RegistroVentas';
-import ContadorVentas from './pages/ContadorVentas';
-import CumplimientoMeta from './pages/CumplimientoMeta';
-import SatisfaccionCliente from './pages/SatisfaccionCliente';
-import IndicadoresGestion from './pages/IndicadoresGestion';
+import { Suspense, lazy } from 'react';
 import { VentasProvider } from './context/VentasContext';
+import MainLayout from './components/layout/MainLayout';
 import './index.css';
+
+// Carga diferida de páginas
+const RegistroVentas = lazy(() => import('./pages/RegistroVentas'));
+const ContadorVentas = lazy(() => import('./pages/ContadorVentas'));
+const CumplimientoMeta = lazy(() => import('./pages/CumplimientoMeta'));
+const SatisfaccionCliente = lazy(() => import('./pages/SatisfaccionCliente'));
+const IndicadoresGestion = lazy(() => import('./pages/IndicadoresGestion'));
+const GestionDatos = lazy(() => import('./components/GestionDatos'));
 
 function App() {
   return (
     <VentasProvider>
-      <div className="min-h-screen bg-base-200">
-        <Navbar />
-        <main className="container mx-auto px-4 py-8">
+      <MainLayout>
+        <Suspense fallback={<div className="p-4">Cargando...</div>}>
           <Routes>
             <Route path="/" element={<RegistroVentas />} />
             <Route path="/ventas" element={<RegistroVentas />} />
@@ -21,9 +24,10 @@ function App() {
             <Route path="/meta" element={<CumplimientoMeta />} />
             <Route path="/satisfaccion" element={<SatisfaccionCliente />} />
             <Route path="/indicadores" element={<IndicadoresGestion />} />
+            <Route path="/gestion-datos" element={<GestionDatos />} />
           </Routes>
-        </main>
-      </div>
+        </Suspense>
+      </MainLayout>
     </VentasProvider>
   );
 }
