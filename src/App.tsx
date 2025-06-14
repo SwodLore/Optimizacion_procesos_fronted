@@ -10,8 +10,9 @@ const ContadorVentas = lazy(() => import('./pages/ContadorVentas'));
 const CumplimientoMeta = lazy(() => import('./pages/CumplimientoMeta'));
 const SatisfaccionCliente = lazy(() => import('./pages/SatisfaccionCliente'));
 const IndicadoresGestion = lazy(() => import('./pages/IndicadoresGestion'));
-const GestionDatos = lazy(() => import('./components/GestionDatos'));
-
+const GestionDatos = lazy(() => import('./pages/GestionDatos'));
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 function App() {
   return (
     <VentasProvider>
@@ -25,7 +26,9 @@ function App() {
             <Route path="/satisfaccion" element={<SatisfaccionCliente />} />
             <Route path="/indicadores" element={<IndicadoresGestion />} />
             <Route path="/gestion-datos" element={<GestionDatos />} />
+            <Route path="*" element={<div className="p-4">Página no encontrada</div>} />
           </Routes>
+          <ToastContainer position="top-right" autoClose={3000} />
         </Suspense>
       </MainLayout>
     </VentasProvider>

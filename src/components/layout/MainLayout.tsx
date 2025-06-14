@@ -54,7 +54,7 @@ const MainLayout = ({ children }: { children: React.ReactNode }) => {
 
       {/* Sidebar móvil */}
       <div className={`fixed inset-0 z-40 lg:hidden ${sidebarOpen ? 'block' : 'hidden'}`}>
-        <div className="fixed inset-0 bg-black bg-opacity-40" onClick={() => setSidebarOpen(false)} />
+        <div className="fixed inset-0" onClick={() => setSidebarOpen(false)} />
         <aside className="fixed inset-y-0 left-0 w-64 bg-white shadow-lg z-50 flex flex-col">
           <div className="flex items-center justify-between px-4 h-16 border-b">
             <h2 className="text-lg font-semibold text-indigo-600">Sistema de Ventas</h2>
