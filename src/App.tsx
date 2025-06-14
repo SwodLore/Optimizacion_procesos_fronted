@@ -13,11 +13,12 @@ const IndicadoresGestion = lazy(() => import('./pages/IndicadoresGestion'));
 const GestionDatos = lazy(() => import('./pages/GestionDatos'));
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Spinner from './components/Spinner';
 function App() {
   return (
     <VentasProvider>
       <MainLayout>
-        <Suspense fallback={<div className="p-4">Cargando...</div>}>
+        <Suspense fallback={<Spinner />}>
           <Routes>
             <Route path="/" element={<RegistroVentas />} />
             <Route path="/ventas" element={<RegistroVentas />} />
