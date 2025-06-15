@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useVentas } from '../context/VentasContext';
-import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend } from 'recharts';
-import { getEncuestas, setEncuestas } from '../utils/localStorage';
+import {
+  PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend
+} from 'recharts';
+import {
+  obtenerEncuestas,
+  crearEncuesta
+} from '../services/encuestasService';
 import type { Encuesta } from '../types';
 
 const SatisfaccionCliente = () => {
   const { ventas } = useVentas();
-  const [encuestas, setEncuestasState] = useState<Encuesta[]>([]);
+  const [encuestas, setEncuestas] = useState<Encuesta[]>([]);
   const [nuevaEncuesta, setNuevaEncuesta] = useState({
     producto: '',
     calificacion: 5,
@@ -14,38 +19,48 @@ const SatisfaccionCliente = () => {
   });
 
   useEffect(() => {
-    const datos = getEncuestas();
-    setEncuestasState(datos);
+    const cargarEncuestas = async () => {
+      try {
+        const data = await obtenerEncuestas();
+        if (Array.isArray(data)) {
+          setEncuestas(data);
+        } else {
+          console.error('La respuesta no es un array', data);
+        }
+      } catch (error) {
+        console.error('Error al obtener encuestas:', error);
+      }
+    };
+    cargarEncuestas();
   }, []);
 
-  // Guardar encuestas en localStorage cada vez que cambian
-  useEffect(() => {
-    if (encuestas.length > 0) {
-      setEncuestas(encuestas);
-    }
-  }, [encuestas]);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const nueva = {
-      id: Date.now(),
-      fecha: new Date().toISOString().split('T')[0],
-      ...nuevaEncuesta
-    };
-    const nuevasEncuestas = [...encuestas, nueva];
-    setEncuestasState(nuevasEncuestas);
-    setNuevaEncuesta({ producto: '', calificacion: 5, comentario: '' });
+
+    try {
+      const nueva = {
+        fecha: new Date().toISOString().split('T')[0],
+        ...nuevaEncuesta
+      };
+      const encuestaCreada = await crearEncuesta(nueva);
+      setEncuestas([...encuestas, encuestaCreada]);
+      setNuevaEncuesta({ producto: '', calificacion: 5, comentario: '' });
+    } catch (error) {
+      console.error('Error al crear encuesta:', error);
+    }
   };
 
-  // Estadísticas
   const totalEncuestas = encuestas.length;
   const promedioCalificacion = totalEncuestas
     ? encuestas.reduce((acc, curr) => acc + curr.calificacion, 0) / totalEncuestas
     : 0;
-  const calificacionesPorNivel = encuestas.reduce((acc: { [key: number]: number }, curr) => {
-    acc[curr.calificacion] = (acc[curr.calificacion] || 0) + 1;
-    return acc;
-  }, {});
+
+  const calificacionesPorNivel = Array.isArray(encuestas)
+    ? encuestas.reduce((acc: { [key: number]: number }, curr) => {
+        acc[curr.calificacion] = (acc[curr.calificacion] || 0) + 1;
+        return acc;
+      }, {})
+    : {};
 
   const datosGrafico = Object.entries(calificacionesPorNivel).map(([calificacion, cantidad]) => ({
     name: `${calificacion} estrellas`,
@@ -88,7 +103,7 @@ const SatisfaccionCliente = () => {
               <select
                 value={nuevaEncuesta.producto}
                 onChange={(e) => setNuevaEncuesta({ ...nuevaEncuesta, producto: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-4 py-2 focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-full border border-gray-300 rounded-md px-4 py-2"
                 required
               >
                 <option value="">Seleccione un producto</option>
@@ -119,7 +134,7 @@ const SatisfaccionCliente = () => {
               <textarea
                 value={nuevaEncuesta.comentario}
                 onChange={(e) => setNuevaEncuesta({ ...nuevaEncuesta, comentario: e.target.value })}
-                className="w-full border border-gray-300 rounded-md px-4 py-2 h-24 resize-none focus:outline-none focus:ring-2 focus:ring-gray-500"
+                className="w-full border border-gray-300 rounded-md px-4 py-2 h-24 resize-none"
                 placeholder="Escriba su comentario aquí..."
               ></textarea>
             </div>

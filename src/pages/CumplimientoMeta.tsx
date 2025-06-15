@@ -1,17 +1,43 @@
-import { useState } from 'react';
-import { useVentas } from '../context/VentasContext';
+import { useEffect, useState } from 'react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import {
   Gauge, CheckCircle2, CalendarCheck2, Target
 } from 'lucide-react';
+import Spinner from '../components/Spinner';
+import { obtenerVentas } from '../services/ventasService';
+import type { Venta } from '../types';
 
 const CumplimientoMeta = () => {
-  const { ventas } = useVentas();
+  const [ventas, setVentas] = useState<Venta[]>([]);
+  const [loading, setLoading] = useState(true);
+
   const [metaDiaria, setMetaDiaria] = useState(100);
   const [metaMensual, setMetaMensual] = useState(3000);
   const [vista, setVista] = useState<'diaria' | 'mensual'>('diaria');
+
+  useEffect(() => {
+    const fetchVentas = async () => {
+      try {
+        const data = await obtenerVentas();
+        setVentas(data);
+      } catch (error) {
+        console.error('Error al obtener ventas:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchVentas();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[300px]">
+        <Spinner />
+      </div>
+    );
+  }
 
   // Agrupación de ventas por día o mes
   const ventasAgrupadas = ventas.reduce((acc: { [key: string]: number }, venta) => {

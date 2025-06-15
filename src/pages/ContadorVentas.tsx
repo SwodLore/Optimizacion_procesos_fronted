@@ -1,14 +1,43 @@
-import { useVentas } from '../context/VentasContext';
+import { useEffect, useState } from 'react';
 import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer
 } from 'recharts';
 import { TrendingUp, TrendingDown, Activity, ListOrdered } from 'lucide-react';
+import { obtenerVentas } from '../services/ventasService';
+import Spinner from '../components/Spinner'; 
+import type { Venta } from '../types';
 
 const ContadorVentas = () => {
-  const { ventas } = useVentas();
+  const [ventas, setVentas] = useState<Venta[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    const fetchVentas = async () => {
+      try {
+        const data = await obtenerVentas();
+        setVentas(data);
+      } catch (error) {
+        console.error('Error al obtener ventas:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchVentas();
+  }, []);
+
+  // Mostrar spinner mientras se cargan los datos
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center min-h-[300px]">
+        <Spinner />
+      </div>
+    );
+  }
+
+  // Procesamiento de datos
   const ventasPorDia = ventas.reduce((acc: { [key: string]: number }, venta) => {
-    const fecha = venta.fecha;
+    const fecha = venta.fecha.split('T')[0]; // 🔧 Removemos la parte de la hora
     acc[fecha] = (acc[fecha] || 0) + Number(venta.unidades);
     return acc;
   }, {});

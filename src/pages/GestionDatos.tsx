@@ -1,15 +1,9 @@
 import { useState, useEffect } from 'react';
-import {
-  inicializarDatos,
-  hacerBackup,
-  restaurarBackup,
-  limpiarDatos,
-  exportarDatos,
-  obtenerEstadisticasAlmacenamiento,
-  STORAGE_KEYS
-} from '../utils/persistencia';
+import { hacerBackup, restaurarBackup, limpiarDatos, exportarDatos, inicializarDatos, STORAGE_KEYS } from '../utils/persistencia';
 import { toast, ToastContainer } from 'react-toastify';
-import ConfirmDialog from '../components/ConfirmDialog'; // Asegúrate de que la ruta sea correcta
+import ConfirmDialog from '../components/ConfirmDialog';
+import { obtenerVentas } from '../services/ventasService';
+import { obtenerEncuestas } from '../services/encuestasService';
 import 'react-toastify/dist/ReactToastify.css';
 
 type DialogConfig = {
@@ -20,9 +14,7 @@ type DialogConfig = {
 };
 
 const GestionDatos = () => {
-  const [estadisticas, setEstadisticas] = useState(obtenerEstadisticasAlmacenamiento());
   const [archivoBackup, setArchivoBackup] = useState<File | null>(null);
-
   const [dialogConfig, setDialogConfig] = useState<DialogConfig>({
     isOpen: false,
     title: '',
@@ -30,15 +22,48 @@ const GestionDatos = () => {
     onConfirm: () => {},
   });
 
+  const [estadisticas, setEstadisticas] = useState<{
+    ventas: { cantidad: number; ultimaActualizacion: string | null };
+    encuestas: { cantidad: number; ultimaActualizacion: string | null };
+    metas: { cantidad: number; ultimaActualizacion: string | null };
+  }>({
+    ventas: { cantidad: 0, ultimaActualizacion: null },
+    encuestas: { cantidad: 0, ultimaActualizacion: null },
+    metas: { cantidad: 0, ultimaActualizacion: null },
+  });
+
   const cerrarDialogo = () => {
     setDialogConfig((prev) => ({ ...prev, isOpen: false }));
   };
 
-  useEffect(() => {
-    const intervalo = setInterval(() => {
-      setEstadisticas(obtenerEstadisticasAlmacenamiento());
-    }, 60000);
+  const cargarEstadisticasDesdeAPI = async () => {
+    try {
+      const [ventas, encuestas] = await Promise.all([
+        obtenerVentas(),
+        obtenerEncuestas(),
+      ]);
 
+      setEstadisticas((prev) => ({
+        ...prev,
+        ventas: {
+          cantidad: ventas.length,
+          ultimaActualizacion: ventas.length > 0 ? ventas[ventas.length - 1].fecha : null,
+        },
+        encuestas: {
+          cantidad: encuestas.length,
+          ultimaActualizacion: encuestas.length > 0 ? encuestas[encuestas.length - 1].fecha : null,
+        },
+      }));
+    } catch (error) {
+      toast.error('❌ Error al cargar estadísticas desde el servidor');
+    }
+  };
+
+  useEffect(() => {
+    cargarEstadisticasDesdeAPI();
+    const intervalo = setInterval(() => {
+      cargarEstadisticasDesdeAPI();
+    }, 60000);
     return () => clearInterval(intervalo);
   }, []);
 
@@ -51,21 +76,22 @@ const GestionDatos = () => {
   };
 
   const ejecutarRestauracionBackup = async () => {
-  if (archivoBackup) {
-    try {
-      const texto = await archivoBackup.text();
-      const exito = restaurarBackup(texto);
-      if (exito) {
-        toast.success('✅ Backup restaurado exitosamente');
-        setEstadisticas(obtenerEstadisticasAlmacenamiento());
-      } else {
-        toast.error('❌ Error al restaurar el backup');
+    if (archivoBackup) {
+      try {
+        const texto = await archivoBackup.text();
+        const exito = restaurarBackup(texto);
+        if (exito) {
+          toast.success('✅ Backup restaurado exitosamente');
+          cargarEstadisticasDesdeAPI();
+        } else {
+          toast.error('❌ Error al restaurar el backup');
+        }
+      } catch (error) {
+        toast.error('⚠️ No se pudo leer el archivo');
       }
-    } catch (error) {
-      toast.error('⚠️ No se pudo leer el archivo');
     }
-  }
-};
+  };
+
   const confirmarRestaurarBackup = () => {
     if (!archivoBackup) {
       toast.warn('⚠️ Selecciona un archivo de backup primero');
@@ -90,7 +116,7 @@ const GestionDatos = () => {
       message: `¿Estás seguro de que deseas eliminar los datos de ${nombre}? Esta acción no se puede deshacer.`,
       onConfirm: () => {
         limpiarDatos(tipo);
-        setEstadisticas(obtenerEstadisticasAlmacenamiento());
+        cargarEstadisticasDesdeAPI();
         toast.info(`🧹 Datos de ${nombre} eliminados`);
         cerrarDialogo();
       },
@@ -104,7 +130,7 @@ const GestionDatos = () => {
       message: '¿Estás seguro de que deseas inicializar los datos con valores de ejemplo?',
       onConfirm: () => {
         inicializarDatos();
-        setEstadisticas(obtenerEstadisticasAlmacenamiento());
+        cargarEstadisticasDesdeAPI();
         toast.success('🔄 Datos inicializados con valores de ejemplo');
         cerrarDialogo();
       },
@@ -115,6 +141,7 @@ const GestionDatos = () => {
     exportarDatos(tipo);
     toast.success(`📤 ${nombre} exportados exitosamente`);
   };
+
   return (
     <>
       <ToastContainer position="top-right" autoClose={3000} />

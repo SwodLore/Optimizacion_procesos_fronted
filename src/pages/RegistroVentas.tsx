@@ -1,12 +1,23 @@
-import { useState } from 'react';
-import { useVentas } from '../context/VentasContext';
+import { useEffect, useState } from 'react';
 import type { Venta } from '../types';
 import { mostrarToast, confirmarAccion } from '../utils/notificaciones';
+import {
+  obtenerVentas,
+  crearVenta,
+  actualizarVenta,
+  eliminarVenta
+} from '../services/ventasService';
+
 
 const RegistroVentas = () => {
-  // Obtenemos todo del contexto, que ya está listo.
-  const { ventas, agregarVenta, eliminarVenta, actualizarVenta, estadisticas } = useVentas();
-
+  const [ventas, setVentas] = useState<Venta[]>([]);
+  const [estadisticas, setEstadisticas] = useState({
+    totalVentas: 0,
+    totalUnidades: 0,
+    productosUnicos: 0,
+    promedioPorVenta: 0
+  });
+  
   const initialState: Omit<Venta, 'id'> = {
     fecha: new Date().toISOString().split('T')[0],
     producto: '',
@@ -15,11 +26,32 @@ const RegistroVentas = () => {
   };
 
   const [formData, setFormData] = useState<Omit<Venta, 'id'>>(initialState);
-  
-  // Estado para saber si estamos editando y qué ID
   const [editingId, setEditingId] = useState<number | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    const cargarVentas = async () => {
+      try {
+        const datos = await obtenerVentas();
+        setVentas(datos);
+        calcularEstadisticas(datos);
+      } catch (error) {
+        console.error('Error cargando ventas:', error);
+        mostrarToast('Error al cargar las ventas.', 'error');
+      }
+    };
+    cargarVentas();
+  }, []);
+
+  const calcularEstadisticas = (ventas: Venta[]) => {
+    const totalVentas = ventas.length;
+    const totalUnidades = ventas.reduce((sum, v) => sum + v.unidades, 0);
+    const productosUnicos = new Set(ventas.map(v => v.producto)).size;
+    const promedioPorVenta = totalVentas ? totalUnidades / totalVentas : 0;
+
+    setEstadisticas({ totalVentas, totalUnidades, productosUnicos, promedioPorVenta });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!formData.producto || formData.unidades <= 0) {
@@ -28,31 +60,26 @@ const RegistroVentas = () => {
     }
 
     try {
-      // Lógica para decidir si agregar o actualizar
       if (editingId !== null) {
-        // MODIFICACIÓN CLAVE: Llamamos a `actualizarVenta` como tu contexto espera (id, datos)
-        actualizarVenta(editingId, {
-            ...formData,
-            unidades: Number(formData.unidades)
-        });
+        const ventaActualizada = await actualizarVenta(editingId, formData);
+        setVentas(prev => prev.map(v => v.id === editingId ? ventaActualizada : v));
         mostrarToast('Venta actualizada exitosamente');
       } else {
-        agregarVenta({
-          ...formData,
-          unidades: Number(formData.unidades)
-        });
+        const nuevaVenta = await crearVenta(formData);
+        setVentas(prev => [...prev, nuevaVenta]);
         mostrarToast('Venta registrada exitosamente');
       }
 
-      // Reseteamos el formulario y el modo edición
       setFormData(initialState);
       setEditingId(null);
+      calcularEstadisticas([...ventas, formData as Venta]);
 
     } catch (error) {
-      console.error('Error al guardar la venta:', error);
+      console.error('Error al guardar venta:', error);
       mostrarToast('Error al guardar la venta.', 'error');
     }
   };
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -65,15 +92,8 @@ const RegistroVentas = () => {
   // Manejador para iniciar la edición
   const handleEdit = (venta: Venta) => {
     setEditingId(venta.id);
-    // Aseguramos que la fecha tenga el formato YYYY-MM-DD para el input[type="date"]
     const fechaFormateada = venta.fecha.includes('T') ? venta.fecha.split('T')[0] : venta.fecha;
-    setFormData({
-      fecha: fechaFormateada,
-      producto: venta.producto,
-      unidades: venta.unidades,
-      observaciones: venta.observaciones
-    });
-    // Opcional: lleva al usuario arriba para ver el formulario
+    setFormData({ ...venta, fecha: fechaFormateada });
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -86,9 +106,17 @@ const RegistroVentas = () => {
   // Manejador para eliminar
   const handleDelete = async (id: number) => {
     const confirmar = await confirmarAccion('¿Eliminar esta venta?', 'No podrás recuperarla');
-    if (confirmar) {
-      eliminarVenta(id);
+    if (!confirmar) return;
+
+    try {
+      await eliminarVenta(id);
+      const nuevasVentas = ventas.filter(v => v.id !== id);
+      setVentas(nuevasVentas);
+      calcularEstadisticas(nuevasVentas);
       mostrarToast('Venta eliminada exitosamente');
+    } catch (error) {
+      console.error('Error al eliminar venta:', error);
+      mostrarToast('Error al eliminar la venta.', 'error');
     }
   };
 
